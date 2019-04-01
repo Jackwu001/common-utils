@@ -1,0 +1,422 @@
+/*
+* author:w候人兮猗(ahwgs)
+* url:https://www.ahwgs.cn
+* */
+
+/**
+ * 是否是数组
+ * @param value
+ * @returns {boolean}
+ */
+export const isArray = (value) => {
+    return toString.call(value) === '[object Array]';
+}
+
+/**
+ * 是否是ArrayBuffer
+ * @param val
+ * @returns {boolean}
+ */
+export const isArrayBuffer = (val) => {
+    return toString.call(val) === '[object ArrayBuffer]';
+}
+
+/**
+ * 是否是FormData
+ * @param val
+ * @returns {boolean}
+ */
+export const isFormData = (val) => {
+    return (typeof FormData !== 'undefined') && (val instanceof FormData);
+}
+
+/**
+ * 确定值是否为ArrayBuffer上的视图
+ *
+ * @param {Object} val The value to test
+ * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
+ */
+export const isArrayBufferView = (val) => {
+    let result;
+    if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
+        result = ArrayBuffer.isView(val);
+    } else {
+        result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
+    }
+    return result;
+}
+
+/**
+ * 是否是字符串
+ * @param val
+ * @returns {boolean}
+ */
+export const isString = (val) => {
+    return typeof val === 'string';
+}
+
+/**
+ * 是否是数字
+ * @param val
+ * @returns {boolean}
+ */
+export const isNumber = (val) => {
+    return typeof val === 'number';
+}
+
+/**
+ *  是否是undefined
+ * @param val
+ * @returns {boolean}
+ */
+export const isUndefined = (val) => {
+    return typeof val === 'undefined';
+}
+
+/**
+ * 是否是对象
+ * @param val
+ * @returns {boolean}
+ */
+export const isObject = (val) => {
+    return val !== null && typeof val === 'object';
+}
+
+/**
+ * 是否是时间对象
+ * @param val
+ * @returns {boolean}
+ */
+export const isDate = (val) => {
+    return toString.call(val) === '[object Date]';
+}
+
+/**
+ * 是否是文件对象
+ * @param val
+ * @returns {boolean}
+ */
+export const isFile = (val) => {
+    return toString.call(val) === '[object File]';
+}
+
+/**
+ * 是否是Blob对象
+ * @param val
+ * @returns {boolean}
+ */
+export const isBlob = (val) => {
+    return toString.call(val) === '[object Blob]';
+}
+
+/**
+ * 是否是方法
+ * @param val
+ * @returns {boolean}
+ */
+export const isFunction = (val) => {
+    return toString.call(val) === '[object Function]';
+}
+
+/**
+ * 是否是流
+ * @param val
+ * @returns {boolean}
+ */
+export const isStream = (val) => {
+    return isObject(val) && isFunction(val.pipe);
+}
+
+/**
+ * 是否是搜索参数
+ * @param val
+ * @returns {boolean}
+ */
+export const isURLSearchParams = (val) => {
+    return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+}
+
+/**
+ * trim 方法
+ * @param str
+ * @returns {string}
+ */
+export const trim = (str) => {
+    return str.replace(/^\s*/, '').replace(/\s*$/, '');
+}
+
+/**
+ * Determine if we're running in a standard browser environment
+ *
+ * This allows axios to run in a web worker, and react-native.
+ * Both environments support XMLHttpRequest, but not fully standard globals.
+ *
+ * web workers:
+ *  typeof window -> undefined
+ *  typeof document -> undefined
+ *
+ * react-native:
+ *  navigator.product -> 'ReactNative'
+ */
+export const isStandardBrowserEnv = () => {
+    if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+        return false;
+    }
+    return (
+        typeof window !== 'undefined' &&
+        typeof document !== 'undefined'
+    );
+}
+
+/**
+ * Iterate over an Array or an Object invoking a function for each item.
+ *
+ * If `obj` is an Array callback will be called passing
+ * the value, index, and complete array for each item.
+ *
+ * If 'obj' is an Object callback will be called passing
+ * the value, key, and complete object for each property.
+ *
+ * @param {Object|Array} obj The object to iterate
+ * @param {Function} fn The callback to invoke for each item
+ */
+export const forEach = (obj, fn) => {
+    // Don't bother if no value provided
+    if (obj === null || typeof obj === 'undefined') {
+        return;
+    }
+
+    // Force an array if not already something iterable
+    if (typeof obj !== 'object') {
+        /*eslint no-param-reassign:0*/
+        obj = [obj];
+    }
+
+    if (isArray(obj)) {
+        // Iterate over array values
+        for (var i = 0, l = obj.length; i < l; i++) {
+            fn.call(null, obj[i], i, obj);
+        }
+    } else {
+        // Iterate over object keys
+        for (var key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                fn.call(null, obj[key], key, obj);
+            }
+        }
+    }
+}
+
+/**
+ * Accepts varargs expecting each argument to be an object, then
+ * immutably merges the properties of each object and returns result.
+ *
+ * When multiple objects contain the same key the later object in
+ * the arguments list will take precedence.
+ *
+ * Example:
+ *
+ * ```js
+ * var result = merge({foo: 123}, {foo: 456});
+ * console.log(result.foo); // outputs 456
+ * ```
+ *
+ * @param {Object} obj1 Object to merge
+ * @returns {Object} Result of all merge properties
+ */
+export const merge = (/* obj1, obj2, obj3, ... */) => {
+    var result = {};
+
+    function assignValue(val, key) {
+        if (typeof result[key] === 'object' && typeof val === 'object') {
+            result[key] = merge(result[key], val);
+        } else {
+            result[key] = val;
+        }
+    }
+
+    for (var i = 0, l = arguments.length; i < l; i++) {
+        forEach(arguments[i], assignValue);
+    }
+    return result;
+}
+
+/**
+ * Extends object a by mutably adding to it the properties of object b.
+ *
+ * @param {Object} a The object to be extended
+ * @param {Object} b The object to copy properties from
+ * @param {Object} thisArg The object to bind function to
+ * @return {Object} The resulting value of object a
+ */
+export const extend = (a, b, thisArg) => {
+    forEach(b, function assignValue(val, key) {
+        if (thisArg && typeof val === 'function') {
+            a[key] = bind(val, thisArg);
+        } else {
+            a[key] = val;
+        }
+    });
+    return a;
+}
+
+/**
+ * 是否是绝对路径
+ * @param url
+ * @returns {boolean}
+ */
+export const isAbsoluteURL = (url) => {
+    // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+    // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+    // by any combination of letters, digits, plus, period, or hyphen.
+    return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+};
+
+/**
+ * 防抖函数
+ * @param method 事件触发的操作
+ * @param delay 多少毫秒内连续触发事件，不会执行
+ * @returns {Function}
+ */
+export const debounce = (method, delay) => {
+    let timer = null;
+    return function () {
+        let self = this,
+            args = arguments;
+        timer && clearTimeout(timer);
+        timer = setTimeout(function () {
+            method.apply(self, args);
+        }, delay);
+    }
+}
+
+/**
+ * 节流函数
+ * @param method 事件触发的操作
+ * @param mustRunDelay 间隔多少毫秒需要触发一次事件
+ */
+export const throttle = (method, mustRunDelay) => {
+    let timer,
+        args = arguments,
+        start;
+    return function loop() {
+        let self = this;
+        let now = Date.now();
+        if (!start) {
+            start = now;
+        }
+        if (timer) {
+            clearTimeout(timer);
+        }
+        if (now - start >= mustRunDelay) {
+            method.apply(self, args);
+            start = now;
+        } else {
+            timer = setTimeout(function () {
+                loop.apply(self, args);
+            }, 50);
+        }
+    }
+}
+
+/**
+ * 添加收藏功能
+ * @param url
+ * @param title
+ */
+export const addFavorite = (url, title) => {
+    var ua = navigator.userAgent.toLowerCase();
+    if (ua.indexOf("360se") > -1) {
+        alert("由于360浏览器功能限制，请按手动收藏！");
+    } else if (document.all) {
+        // window.external.AddToFavoritesBar(url, title); //IE8
+        window.external.addFavorite(url, title);
+    } else if (document.all) {
+        try {
+            window.external.addFavorite(url, title);
+        } catch (e) {
+            alert('您的浏览器不支持自动添加收藏, 请使用浏览器菜单手动设置!');
+        }
+    } else if (window.sidebar) {
+        window.sidebar.addPanel(title, url, "");
+    } else if (window.opera && window.print) {
+        var e = document.createElement('a');
+        e.setAttribute('href', location.href);
+        e.setAttribute('title', document.title);
+        e.setAttribute('rel', 'sidebar');
+        e.click();
+    } else {
+        alert('您的浏览器不支持自动添加收藏, 请使用浏览器菜单手动设置!');
+    }
+}
+
+/**
+ * 判断host是否是ip地址
+ * @param host
+ * @returns {boolean}
+ */
+export const isIp = (host) => {
+    const ipv4Regex = /^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$/;
+    const ipv6Regex = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
+    const isIP = ipv4Regex.test(host) || ipv6Regex.test(host);
+    return isIP;
+}
+
+/**
+ * 个位数字补零
+ * @param val
+ * @returns {string}
+ */
+export function fixedZero(val) {
+    return val * 1 < 10 ? `0${val}` : val;
+}
+
+
+/**
+ * 金钱转大写
+ * @param n
+ * @returns {string}
+ */
+export function digitUppercase(n) {
+    const fraction = ['角', '分'];
+    const digit = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+    const unit = [['元', '万', '亿'], ['', '拾', '佰', '仟', '万']];
+    let num = Math.abs(n);
+    let s = '';
+    fraction.forEach((item, index) => {
+        s += (digit[Math.floor(accMul(num, 10 * 10 ** index)) % 10] + item).replace(/零./, '');
+    });
+    s = s || '整';
+    num = Math.floor(num);
+    for (let i = 0; i < unit[0].length && num > 0; i += 1) {
+        let p = '';
+        for (let j = 0; j < unit[1].length && num > 0; j += 1) {
+            p = digit[num % 10] + unit[1][j] + p;
+            num = Math.floor(num / 10);
+        }
+        s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
+    }
+
+    return s
+        .replace(/(零.)*零元/, '元')
+        .replace(/(零.)+/g, '零')
+        .replace(/^整$/, '零元整');
+}
+
+/**
+ * 生成UUId
+ * @returns {string}
+ */
+export const createUUID = () => {
+    let s = [];
+    let hexDigits = '0123456789abcdefghijklmnopqrstuvwxyz';
+    for (let i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
+    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+    s[8] = s[13] = s[18] = s[23] = '-';
+
+    return s.join('');
+}
+
