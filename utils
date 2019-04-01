@@ -420,3 +420,17 @@ export const createUUID = () => {
     return s.join('');
 }
 
+/**
+ * 寻找数组下标
+ * @param array
+ * @param predicate （model => model.namespace === namespace）
+ * @returns {number}
+ */
+export const findIndex = (array, predicate) => {
+    for (let i = 0, length = array.length; i < length; i++) {
+        if (predicate(array[i], i)) return i;
+    }
+
+    return -1;
+};
+
