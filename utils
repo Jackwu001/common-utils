@@ -1,6 +1,8 @@
+```javascript
 /*
 * author:w候人兮猗(ahwgs)
 * url:https://www.ahwgs.cn
+* github:https://github.com/ahwgs/common-utils/blob/master/utils
 * */
 
 /**
@@ -419,7 +421,6 @@ export const createUUID = () => {
 
     return s.join('');
 }
-
 /**
  * 寻找数组下标
  * @param array
@@ -434,3 +435,137 @@ export const findIndex = (array, predicate) => {
     return -1;
 };
 
+/**
+ * 设备判断
+ * @type {string}
+ */
+const ua = window.navigator.userAgent.toLowerCase();
+
+const isAndroid = /(Android);?[\s/]+([\d.]+)?/.test(ua)
+const isIpad = /(iPad).*OS\s([\d_]+)/.test(ua)
+const isIpod = /(iPod)(.*OS\s([\d_]+))?/.test(ua)
+const isIphone = !isIpad && /(iPhone\sOS)\s([\d_]+)/.test(ua)
+const isWechat = /micromessenger/i.test(ua)
+const isAlipay = /alipayclient/i.test(ua)
+
+
+/**
+ * 是否是移动端
+ * @returns {boolean}
+ * @constructor
+ */
+export const IsMobile = () => {
+    const sUserAgent = navigator.userAgent.toLowerCase();
+    if ((sUserAgent.match(/(iphone|ipad|ipod|android|windows ce|windows mobile)/i))) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * 是否是Ie10以下
+ * @returns {boolean}
+ * @constructor
+ */
+export const LTIE10 = () => {
+    const userAgent = navigator.userAgent;
+    //判断是否IE浏览器
+    const isIE = userAgent.indexOf("compatible") > -1
+        && userAgent.indexOf("MSIE") > -1
+        && userAgent.indexOf("Opera") == -1;
+
+    if (isIE) {
+        const reIE = new RegExp("MSIE (\\d+\\.\\d+);");
+        reIE.test(userAgent);         //检测一个字符串是否匹配某个模式
+        const fIEVersion = parseFloat(RegExp["$1"]);
+        if (fIEVersion < 10)
+            return true;
+    }
+    return false;
+}
+
+/**
+ * 判断两个域名是否相等
+ * @param mobileDomain
+ * @param host
+ * @returns {number}
+ * @constructor
+ */
+export const IsSubDomain = (mobileDomain, host) => {
+    this.getdomain = function (f) {
+        var e = f.indexOf("://");
+        if (e > 0) {
+            var h = f.substr(e + 3)
+        } else {
+            var h = f
+        }
+        var g = /^www\./;
+        if (g.test(h)) {
+            h = h.substr(4)
+        }
+        return h
+    };
+    if (mobileDomain == host) {
+        return 1 //相同
+    } else {
+        var mobileDomain = this.getdomain(mobileDomain);
+        var b = this.getdomain(host);
+        if (mobileDomain == b) {
+            return 1 //相同
+        } else {
+            mobileDomain = mobileDomain.replace(".", "\\.");
+            var a = new RegExp("\\." + mobileDomain + "$");
+            if (b.match(a)) {
+                return 2 //当前host包含mobileDomain
+            } else {
+                return 0 //不同
+            }
+        }
+    }
+}
+
+
+/**
+ * 将移动端自动重定向到pc
+ * @param mobileDomain
+ * @constructor
+ */
+export const RedirectMobile=(mobileDomain)=> {
+    try {
+        if (!IsMobile()) {  //先判断是否是手机端
+            if (LTIE10())
+                window.location.href = "/upgradebrowser"; //这里进行非ie10以上版本处理
+            return;
+        }
+
+        var IsJump = false;
+        var host = window.location.host;
+        var vey = IsSubDomain(mobileDomain, host); //判断两个域名是否相同
+        if (vey == 1 || vey == 2) { //相同或者包含
+            IsJump = false
+        } else {
+            //取缓存中的值
+            if (sessionStorage.IsJumpMobile == undefined)
+            {
+                if (confirm("检测到您使用的是移动设备，是否跳转到移动版？")) {
+                    var path = window.location.pathname + window.location.search;
+                    if (mobileDomain.indexOf("http://") == -1)
+                        mobileDomain = "http://" + mobileDomain;
+                    mobileDomain = mobileDomain + path;
+                    IsJump = true;
+                }
+                else
+                {
+                    sessionStorage.IsJumpMobile = false;
+                }
+            }
+        }
+
+        if (IsJump) {
+            location.replace(mobileDomain);
+        }
+    } catch (err) { }
+}
+
+
+```
