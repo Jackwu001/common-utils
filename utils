@@ -1,4 +1,4 @@
-```javascript
+
 /*
 * author:w候人兮猗(ahwgs)
 * url:https://www.ahwgs.cn
@@ -567,5 +567,3 @@ export const RedirectMobile=(mobileDomain)=> {
     } catch (err) { }
 }
 
-
-```
