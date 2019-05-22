@@ -1,4 +1,5 @@
 
+
 /*
 * author:w候人兮猗(ahwgs)
 * url:https://www.ahwgs.cn
@@ -566,4 +567,210 @@ export const RedirectMobile=(mobileDomain)=> {
         }
     } catch (err) { }
 }
+
+
+
+
+
+  /**
+ * 将一级的数据结构处理成树状数据结构
+ * @param {Object} obj {key, pKey, data}
+ *  @param obj.key  字段名称 比如id
+ *  @param obj.pKey 父字段名称 比如 pid
+ *  @param obj.rootPValue 根节点的父字段的值
+ *  @param obj.data 需要处理的数据
+ *  @param obj.jsonData 是否深复制数据（默认是true）
+ * @return {Array} arr
+   */
+   
+   // 使用示例代码：
+    list: [{id: 1, pid: 0, name: 11}, {id: 2, pid: 1, name: 2}]
+    getTreeArr({ key: 'id', pKey: 'pid', data: list })
+    result: [
+        {id: 1, pid: 0, name: 11, children: [
+            {id: 2, pid: 1, name: 2}
+        ]}
+    ]   
+
+  getTreeArr: (obj) => {
+    if (!Array.isArray(obj.data)) {
+      console.log('getTreeArr=>请传入数组')
+      return []
+    }
+    obj.jsonData = obj.jsonData === false ? obj.jsonData : true
+    const arr = obj.jsonData ? JSON.parse(JSON.stringify(obj.data)) : obj.data
+    const arr1 = []
+    // 将数据处理成数状结构
+    arr.forEach(item => {
+      let index = 0
+      item.children = []
+      arr.forEach(item1 => {
+        // 得到树结构关系
+        if (item[obj.key] === item1[obj.pKey]) {
+          item.children.push(item1)
+        }
+        // 判断根节点
+        if (item1[obj.key] !== item[obj.pKey]) {
+          index++
+        }
+      })
+      // 没传入根节点，根据当前数据结构得到根节点
+      if (!('rootPValue' in obj) && index === arr.length) {
+        arr1.push(item)
+      }
+    })
+    // 传入根节点，根据传入的根节点组成树结构
+    if ('rootPValue' in obj) {
+      arr.forEach(item => {
+        if (item[obj.pKey] === obj.rootPValue) {
+          arr1.push(item)
+        }
+      })
+    }
+    return arr1
+  }
+
+//数组去重
+//根据对象的属性不同去重
+  handleRepeatArr ({ data, key }) {
+    if (!Array.isArray(data)) {
+      console.log('请传入数组')
+      return
+    }
+    const arr = []; const obj = {}
+    data.forEach((item, index) => {
+      const attr = key ? item[key] : item
+      if (!obj[attr]) {
+        obj[attr] = index + 1
+        arr.push(item)
+      }
+    })
+    return arr
+  }
+
+//递归去重  会将数据默认排序
+  handleRepeatArr ({ data, key }) {
+    if (!Array.isArray(data)) {
+      console.log('请传入数组')
+      return
+    }
+    /** 1.递归去重，缺点，会将数据默认排序 */
+    // 先对数据做排序处理
+    data = data.sort((item, item1) => {
+      if (key) {
+        return item[key] - item1[key]
+      }
+      return item - item1
+    })
+    // 递归去重
+    function getData (index) {
+      if (index >= 1) {
+        // 判断当前数据和下一条数据是否相等
+        let result = key ? data[index][key] === data[index - 1][key] : data[index] === data[index - 1]
+        if (result) {
+          data.splice(index, 1)
+        }
+        getData(index - 1)
+      }
+    }
+    getData(data.length - 1)
+    return data
+  }
+  
+  //利用indexOf以及forEach
+  //适合处理数组，不适合处理对象数组
+  handleRepeatArr ({ data, key }) {
+    if (!Array.isArray(data)) {
+      console.log('请传入数组')
+      return
+    }
+    let arr = []
+    data.forEach((item, index) => {
+      // 如果当前元素在之后没有出现过(后面出现的数据会保留)
+      // let result = data.indexOf(item, index + 1)
+      // 如果当前元素在之前没有出现过(前面出现的数据会保留)
+      let result = index === 0 ? -1 : data.lastIndexOf(item, index - 1)
+      if (result === -1) {
+        arr.push(item)
+      }
+    })
+    return arr
+  }
+//双层循环去重
+//占用内存高
+  handleRepeatArr ({ data, key }) {
+    if (!Array.isArray(data)) {
+      console.log('请传入数组')
+      return
+    }
+    for (let i = 0, len = data.length; i < len; i++) {
+      for (let j = i + 1; j < len; j++) {
+        let result = key ? data[i][key] === data[j][key] : data[i] === data[j]
+        if (result) {
+          data.splice(j, 1)
+          len--
+          j--
+        }
+      }
+    }
+    return data
+  }
+
+
+//复制内容
+  /**
+   * 复制
+   * @param {String} value 要复制的值
+   */
+  copyData (value) {
+    const inputDom = document.createElement('input')
+    inputDom.value = value
+    document.body.appendChild(inputDom)
+    inputDom.select() // 选择对象
+    document.execCommand('Copy') // 执行浏览器复制命令
+    document.body.removeChild(inputDom) // 删除DOM
+  }
+ //a模拟window.open打开窗口
+ /*
+    因为有些浏览器会默认拦截window.open，当需要函数中打开窗口，可以使用a标签模拟window.open
+ */
+   /**
+   * a模拟window.open，不会被浏览器拦截
+   * @param {String} url        a标签打开的地址
+   * @param {String} id         a标签的ID
+   * @param {String} targetType a标签点击打开的方式（当前页面打开还是新窗口打开）
+   */
+  openWindow: (url, targetType = '_blank', id = 'open', download = false) => {
+    // 如果存在则删除
+    if (document.getElementById(id)) {
+      document.body.removeChild(document.getElementById(id))
+    }
+    const a = document.createElement('a')
+    a.setAttribute('href', url)
+    if (download) {
+      a.setAttribute('download', url)
+    }
+    a.setAttribute('target', targetType)
+    a.setAttribute('id', id)
+    document.body.appendChild(a)
+    a.click()
+  }
+
+//文件大小显示转换
+/*
+// 使用示例代码：
+bytesToSize(12) // 12.0 B
+bytesToSize(683468) // 667 KB
+bytesToSize(4544) // 4.44 KB
+bytesToSize(98223445) // 93.7 MB
+bytesToSize(9822344566) // 9.15 GB
+
+*/
+  bytesToSize (bytes) {
+    if (bytes === 0) return '0 B'
+    var k = 1024 // or 1024
+    var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    var i = Math.floor(Math.log(bytes) / Math.log(k))
+    return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i]
+  }
 
